@@ -43,7 +43,7 @@ config/                          public term lists and templates, copied to $TRU
   hn_terms.txt  subreddits.txt  pe_firms.txt  watchlist.example.txt
   CHANGELOG.md                   weight changes and reasons (spec §11)
 schemas/classification_v1.json   spec §8 as real JSON Schema
-schemas/db/001_init.sql          spec §7 tables; later files add columns, never drop
+trueffelsau/schema/001_init.sql  spec §7 tables; later files add columns, never drop
 trueffelsau/
   __init__.py  __main__.py  cli.py
   home.py                        resolves TRUEFFELSAU_HOME, loads env file, paths
@@ -77,7 +77,7 @@ tests/
 .github/workflows/ci.yml         ruff, mypy, pytest on 3.12 and 3.14
 ```
 
-## Data model (SQL, `schemas/db/001_init.sql`)
+## Data model (SQL, `trueffelsau/schema/001_init.sql`)
 
 Spec §7 tables plus three additions needed to make the pipeline resumable and
 auditable (spec §7 gets these lines):
@@ -86,7 +86,7 @@ auditable (spec §7 gets these lines):
 - `classifications` gains `input_tokens INTEGER, output_tokens INTEGER` — digest §10.4 must report token cost.
 - `candidate_events(candidate_id, event_id, PRIMARY KEY(candidate_id, event_id))` — links the events whose quotes form the evidence of a score.
 
-Rules: `events.raw_hash = sha256(source || source_url || raw_text)` with `UNIQUE`; collectors use `INSERT OR IGNORE`, so reruns create no duplicates. No `DELETE` anywhere; `candidates.status` and `outcomes` mark instead. `PRAGMA user_version` tracks migrations; `db.migrate()` applies `schemas/db/NNN_*.sql` in order.
+Rules: `events.raw_hash = sha256(source || source_url || raw_text)` with `UNIQUE`; collectors use `INSERT OR IGNORE`, so reruns create no duplicates. No `DELETE` anywhere; `candidates.status` and `outcomes` mark instead. `PRAGMA user_version` tracks migrations; `db.migrate()` applies `trueffelsau/schema/NNN_*.sql` in order. They live inside the package because the weekly run is a systemd unit pointed at an installed wheel, which has no repository root to read from.
 
 Candidate identity: `candidates.product` is the normalised classifier `product` (lowercase, ASCII, collapsed whitespace). Two events with the same normalised product join the same candidate.
 

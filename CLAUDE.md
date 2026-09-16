@@ -187,8 +187,10 @@ trueffelsau/         the package, named after the repository
   score/             scoring and weights
   digest/            digest writer
   home.py            resolves the runtime home, reads the env file
+  db.py              opens the database, applies migrations
+  schema/            NNN_name.sql migrations, applied in order
 config/              term lists and templates, public ones only
-schemas/             JSON schemas, versioned
+schemas/             JSON schemas for the classifier, versioned
 tests/
 CLAUDE.md            this file
 ```

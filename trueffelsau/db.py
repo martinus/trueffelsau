@@ -10,54 +10,71 @@ same reasoning covers columns and tables: the outcomes loop compares what the
 filter said months ago with what happened, and a dropped column is a comparison
 nobody can make again. A later file may add a table, add a column, or backfill
 one -- never drop or rewrite.
+
+A migration file carries no transaction control of its own, and no statement
+that cannot run inside a transaction (`VACUUM`, `PRAGMA journal_mode`). `migrate`
+runs each file in one, so such a file fails when it is applied, with SQLite's own
+message. This stays a documented convention rather than a check because the
+check cannot be written honestly: refusing any file containing `BEGIN` would also
+refuse `CREATE TRIGGER ... BEGIN ... END`, which is legitimate SQL.
+
+The one case that is not merely loud is a file containing a bare `COMMIT`: its
+own statements commit, `user_version` commits with them, and the migration then
+raises anyway. The database ends up correct and the caller is told it failed.
+Measured, not assumed -- and it is why the convention is stated here rather than
+left implicit.
 """
 
 from __future__ import annotations
 
 import re
 import sqlite3
+from contextlib import suppress
 from dataclasses import dataclass
-from importlib.resources import files
 from pathlib import Path
 
-#: Migration file names: a zero-padded number, an underscore, a name. The number
-#: is the `user_version` the file brings the database to, so it starts at 1 --
-#: a fresh SQLite database reports 0, which must mean "nothing applied yet".
+#: Migration file names: a number, an underscore, a lowercase name. The number is
+#: the `user_version` the file brings the database to, so it starts at 1 -- a
+#: fresh SQLite database reports 0, which has to mean "nothing applied yet".
 MIGRATION_PATTERN = re.compile(r"^(\d+)_[a-z0-9_]+\.sql$")
-
-#: Where the files live, inside the package rather than beside it. A wheel
-#: installed into a virtualenv has no repository root to read from, and the
-#: weekly run is a systemd unit pointed at exactly such an install.
-SCHEMA_PACKAGE = "trueffelsau"
-SCHEMA_DIR = "schema"
 
 
 @dataclass(frozen=True)
 class Migration:
-    """One numbered schema file."""
+    """One numbered schema file. Its contents are read when it is applied."""
 
     version: int
-    name: str
-    sql: str
+    path: Path
 
 
 def schema_dir() -> Path:
-    """The directory holding the migration files."""
-    return Path(str(files(SCHEMA_PACKAGE))) / SCHEMA_DIR
+    """The directory holding the migration files.
+
+    Inside the package rather than beside it: the weekly run is a systemd unit
+    pointed at an installed wheel, which has no repository root to read from.
+    """
+    return Path(__file__).parent / "schema"
 
 
 def migrations(directory: Path | None = None) -> list[Migration]:
     """Every migration, lowest version first.
 
     A file whose name does not parse is an error rather than something to skip.
-    `002_add_scores.SQL` or `2_add_scores.sql` would otherwise be ignored in
+    `002_add_scores.SQL` or `2-add-scores.sql` would otherwise be passed over in
     silence, and the first anyone would know of it is a missing table.
     """
     source = schema_dir() if directory is None else directory
-    found: dict[int, Migration] = {}
+    found: list[Migration] = []
 
-    for path in sorted(source.iterdir()):
-        if path.name.startswith("__") or path.is_dir():
+    for path in source.iterdir():
+        # The rule is "every .sql file here is a migration"; anything else is
+        # not addressed to us. A misnamed migration still ends in `.sql`, so it
+        # reaches the pattern below and is refused rather than passed over --
+        # which is the case worth being strict about. Skipping by name instead
+        # would be `__pycache__` with the label filed off. Compared
+        # case-insensitively so `001_init.SQL` reaches the pattern and is
+        # refused, rather than being quietly passed over as not-a-migration.
+        if path.suffix.lower() != ".sql":
             continue
 
         match = MIGRATION_PATTERN.match(path.name)
@@ -68,31 +85,29 @@ def migrations(directory: Path | None = None) -> list[Migration]:
         if version < 1:
             raise ValueError(f"{path.name}: version must start at 1, found {version}")
 
-        previous = found.get(version)
-        if previous is not None:
-            raise ValueError(f"{path.name}: version {version} already used by {previous.name}")
+        found.append(Migration(version=version, path=path))
 
-        found[version] = Migration(
-            version=version,
-            name=path.name,
-            sql=path.read_text(encoding="utf-8"),
-        )
+    # The name is in the sort key only to break ties, so a duplicate blames the
+    # same file every time instead of depending on directory order.
+    found.sort(key=lambda migration: (migration.version, migration.path.name))
 
-    ordered = [found[version] for version in sorted(found)]
-    _check_contiguous(ordered)
-    return ordered
+    for expected, migration in enumerate(found, start=1):
+        # Sorted, so a version below its position is a repeat and one above it
+        # is a hole. A hole matters most: applying 004 to a database at 002
+        # would leave `user_version` claiming a shape the schema is not in, and
+        # every later file would build on the wrong one. Refusing version 0
+        # above is what keeps `found[expected - 2]` in range here.
+        if migration.version < expected:
+            raise ValueError(
+                f"{migration.path.name}: version {migration.version} "
+                f"already used by {found[expected - 2].path.name}"
+            )
+        if migration.version > expected:
+            raise ValueError(
+                f"migration {expected} is missing, found {migration.path.name} instead"
+            )
 
-
-def _check_contiguous(ordered: list[Migration]) -> None:
-    """Refuse a gap in the numbering.
-
-    A missing 003 means a file was lost or never committed. Applying 004 over a
-    database at 002 would leave `user_version` claiming a state the schema is
-    not in, and every later migration would be applied to the wrong shape.
-    """
-    for expected, migration in enumerate(ordered, start=1):
-        if migration.version != expected:
-            raise ValueError(f"migration {expected} is missing, found {migration.name} instead")
+    return found
 
 
 def connect(path: Path) -> sqlite3.Connection:
@@ -123,39 +138,46 @@ def migrate(connection: sqlite3.Connection, directory: Path | None = None) -> in
     bump. A half-applied schema recorded under a number that describes neither
     shape is the one failure running again cannot repair.
     """
+    available = migrations(directory)
     current = user_version(connection)
 
-    for migration in migrations(directory):
-        if migration.version <= current:
-            continue
+    if available and current > available[-1].version:
+        raise ValueError(
+            f"database is at version {current} but the newest migration is "
+            f"{available[-1].version}: this code is older than the database"
+        )
 
-        # `executescript` does no implicit transaction control of its own and
-        # commits any pending one before it starts, so `with connection:` would
-        # not wrap this -- the BEGIN and COMMIT have to be in the script. SQLite
-        # keeps DDL and `user_version` inside a transaction, so both roll back
-        # together. The version is an int from a matched pattern; a PRAGMA takes
-        # no parameter binding.
-        try:
-            connection.executescript(
-                f"BEGIN;\n{migration.sql}\nPRAGMA user_version = {migration.version};\nCOMMIT;"
-            )
-        except Exception:
-            # The script stopped before its COMMIT, so the transaction is still
-            # open and everything it did so far is still visible on this
-            # connection. Without this rollback a caller that catches the error
-            # goes on reading half a schema as though it were whole.
-            connection.rollback()
-            raise
+    # `autocommit = False` is what puts the transaction on the connection rather
+    # than in the SQL. Splicing `BEGIN` and `COMMIT` around the file also works,
+    # but it means editing someone else's SQL to get a property the connection
+    # can provide -- and it breaks on a file whose last statement has no
+    # trailing semicolon, because the appended PRAGMA glues onto it.
+    previous_mode = connection.autocommit
+    connection.autocommit = False
+    try:
+        for migration in available:
+            if migration.version <= current:
+                continue
 
-        current = migration.version
+            try:
+                connection.executescript(migration.path.read_text(encoding="utf-8"))
+                # Commits with the DDL above, so the recorded version and the
+                # shape it describes can never disagree. A PRAGMA takes no
+                # parameter binding; the value is an int from a matched pattern.
+                connection.execute(f"PRAGMA user_version = {migration.version}")
+                connection.commit()
+            except Exception:
+                # Without this the caller that catches the error goes on reading
+                # half a schema as though it were whole. `suppress` because a
+                # file that committed on its own leaves nothing open, and the
+                # rollback would then raise a second error over the first one --
+                # which is the error actually worth seeing.
+                with suppress(sqlite3.Error):
+                    connection.rollback()
+                raise
+
+            current = migration.version
+    finally:
+        connection.autocommit = previous_mode
 
     return current
-
-
-def table_names(connection: sqlite3.Connection) -> list[str]:
-    """Every table in the database, sorted. Excludes SQLite's own bookkeeping."""
-    rows = connection.execute(
-        "SELECT name FROM sqlite_master WHERE type = 'table' "
-        "AND name NOT LIKE 'sqlite_%' ORDER BY name"
-    )
-    return [str(row[0]) for row in rows]
