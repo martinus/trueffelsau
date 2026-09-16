@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "trueffelsau"
+# Read from trueffelsau/__init__.py rather than repeated here. Two declarations
+# can disagree, and when they do the installed version lies about what is
+# installed -- which matters most during a release, when it is the only thing
+# anyone checks.
+dynamic = ["version"]
+description = "Finds product ideas with a high chance of success, weekly, from public signals"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "AGPL-3.0-only"
+authors = [{ name = "Martin Leitner-Ankerl", email = "martin.ankerl@gmail.com" }]
+
+# Deliberately empty so far. CLAUDE.md §13 sanctions `requests` and `anthropic`,
+# and both arrive in the commit that first imports them: a declared dependency
+# nobody uses is a dependency nobody notices going stale.
+dependencies = []
+
+[project.optional-dependencies]
+# Floors, not pins, and recent ones -- these are the versions this tree is
+# actually formatted and checked by. `ruff format --check` is a formatter gate
+# whose output changes between versions, so a floor three years behind lets a
+# change pass locally and fail in CI for no reason anyone can see.
+#
+# `test` is separate from `dev` so a job that only runs the suite does not also
+# pull in a linter and a type checker it never invokes.
+test = ["pytest>=8.4"]
+dev = ["ruff>=0.16", "mypy>=2.3", "trueffelsau[test]"]
+
+[project.urls]
+Homepage = "https://github.com/martinus/trueffelsau"
+Source = "https://github.com/martinus/trueffelsau"
+
+[tool.hatch.version]
+path = "trueffelsau/__init__.py"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `--strict-config` fails on an unknown key in this table and `--strict-markers`
+# on a marker nobody registered. Both turn a silent typo into a red run, which
+# is the only way a configuration file can be shown to be read at all.
+#
+# An empty suite needs no guard here: pytest exits 5 when it collects nothing,
+# and a workflow step reads that as the failure it is.
+addopts = "-q --strict-markers --strict-config"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true

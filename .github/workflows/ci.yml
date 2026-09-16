@@ -1,0 +1,57 @@
+name: ci
+
+# Runs on every pull request, and again on `main` after a merge. The second half
+# matters even though the same commits already passed: a pull request is tested
+# against its own merge result, and two pull requests that are each green can
+# still break `main` together.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A new push to a branch makes the previous run's answer stale. `main` is
+# excluded because its runs are the record of what each merge did, and a
+# cancelled one leaves a gap in it.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint:
+    name: lint and types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e '.[dev]'
+      - run: ruff check .
+      # Separate from `ruff check`: formatting is a different question, and
+      # folding it in hides which of the two failed.
+      - run: ruff format --check .
+      - run: mypy trueffelsau tests
+
+  tests:
+    # 3.12 is the floor `pyproject.toml` declares; 3.14 is what the owner's
+    # machine actually runs. Testing only one of them tests a Python nobody has.
+    name: tests ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Both versions report. Stopping at the first failure hides whether a
+      # break is version-specific, which is the one thing a matrix is for.
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -e '.[test]'
+      - run: pytest
