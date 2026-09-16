@@ -1,0 +1,21 @@
+# The virtual environment is per-machine; pyproject.toml is what is shared.
+.venv/
+
+# Tool caches.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Private runtime state (CLAUDE.md §15). These normally live under
+# $TRUEFFELSAU_HOME outside the checkout, but are ignored here too so a local
+# run with TRUEFFELSAU_HOME unset cannot commit collected text or the owner's
+# weights by accident.
+data/
+digests/
+inbox/
+config/weights.toml
+config/watchlist.txt
+env
+.env

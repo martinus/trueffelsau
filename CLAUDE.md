@@ -178,22 +178,38 @@ This is the part that makes the tool better. Do not skip it.
 
 ## 13. Repo layout
 
+The repository holds the public half: code, schemas, and this spec.
+
 ```
-radar/
+trueffelsau/         the package, named after the repository
   collectors/        one module per source
   classify/          prompt, schema, batch client
   score/             scoring and weights
   digest/            digest writer
-  config/            weights.toml, term lists, watchlist, CHANGELOG.md
-  schemas/           JSON schemas, versioned
-  data/              radar.db (git-ignored)
-  digests/           weekly output (git-ignored or private)
-  inbox/             manual exports (git-ignored)
-  tests/
-  CLAUDE.md          this file
+  home.py            resolves the runtime home, reads the env file
+config/              term lists and templates, public ones only
+schemas/             JSON schemas, versioned
+tests/
+CLAUDE.md            this file
 ```
 
-Language: Python 3.12. Dependencies: `requests`, `sqlite3` (stdlib),
+The private half lives outside the checkout, in the runtime home:
+
+```
+$TRUEFFELSAU_HOME/   default ~/.local/share/trueffelsau
+  config/            weights.toml, watchlist.txt, CHANGELOG.md
+  data/              radar.db
+  digests/           weekly output
+  inbox/             manual exports
+  env                API keys, read by systemd and by the CLI
+```
+
+The home is outside the checkout on purpose. Each task runs in a throw-away git
+worktree, so a database or a digest archive kept next to the code is discarded
+with the worktree that happened to create it. A path outside the repository
+also cannot be committed by accident.
+
+Language: Python 3.12 or newer. Dependencies: `requests`, `sqlite3` (stdlib),
 `anthropic`, `tomllib` (stdlib). Add a dependency only when it removes real
 work.
 
@@ -209,9 +225,11 @@ it links to the quotes that produced its score.
 
 ## 15. What is public and what is private
 
-- Code, schemas, and this spec: public (MIT).
-- `config/weights.toml`, `config/watchlist.txt`, `data/`, `digests/`,
-  `inbox/`: private. They hold the owner's judgment and collected text.
+- Code, schemas, and this spec: public (AGPL-3.0, see `LICENSE`).
+- Everything under `$TRUEFFELSAU_HOME` is private. The weights and the
+  watchlist hold the owner's judgment, `data/` and `digests/` hold collected
+  text and half-formed judgments about named companies, and `env` holds API
+  keys. None of it is in the repository.
 
 ## 16. Rules for the agent
 
