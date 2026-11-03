@@ -30,7 +30,8 @@ the data model, the sources, and the scoring.
 
 ## Status
 
-Early. The specification is complete. The code is not.
+Early. The specification is complete. `trueffelsau init` works. The collectors,
+the classifier and the digest do not exist yet.
 
 ## Install
 
@@ -41,6 +42,18 @@ python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
 .venv/bin/pytest
 ```
+
+Then create the runtime home:
+
+```sh
+.venv/bin/trueffelsau init
+```
+
+This creates the folders, copies the config templates, and creates the
+database. It never overwrites a file that exists. Run it again after an update
+to add new templates.
+
+Put your API keys into the `env` file in the runtime home.
 
 ## Public and private
 
