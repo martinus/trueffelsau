@@ -1,0 +1,38 @@
+# Search terms for the Hacker News collector (CLAUDE.md section 6).
+# The Reddit collector uses the same terms in each subreddit.
+# One term per line. Blank lines and lines that start with # are ignored.
+# Each term costs one call per source, so keep the list short.
+
+# price
+price increase
+new pricing
+now paid
+paywall
+
+# forced_account
+requires an account
+login required
+
+# license
+license change
+relicense
+source available
+
+# shutdown
+shutting down
+end of life
+discontinued
+sunset
+
+# acquisition
+acquired by
+private equity
+
+# api_lockdown
+API pricing
+API access removed
+
+# pain
+alternative to
+switching from
+enshittification

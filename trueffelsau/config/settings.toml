@@ -1,0 +1,53 @@
+# trueffelsau settings. `trueffelsau init` copies this file to
+# $TRUEFFELSAU_HOME/config/settings.toml and never overwrites it afterwards.
+# Edit the copy, not this template.
+#
+# Every key is optional. A missing key uses the value shown here.
+# An unknown key is an error, so a typo cannot be ignored in silence.
+
+# --- Classifier (CLAUDE.md section 8) --------------------------------------
+
+# The model that classifies events. Check https://docs.claude.com for current
+# names. When you change it, change the two prices below too.
+model = "claude-sonnet-5"
+
+# Batch prices in USD per million tokens. The digest uses them to report cost.
+input_price_per_mtok = 1.0
+output_price_per_mtok = 5.0
+
+# Events per Message Batches request.
+batch_size = 1000
+
+# The most events one run sends to the model. This caps the cost of one week.
+max_events_per_run = 2000
+
+# Event text longer than this is cut, and the model is told that it was cut.
+max_chars_per_event = 6000
+
+# Seconds between two status checks of a running batch.
+batch_poll_seconds = 60
+
+# --- Collectors (CLAUDE.md sections 6 and 12) ------------------------------
+
+# A source with a successful run in the last this-many hours is skipped.
+# Section 12 allows at most one run per day against third-party services.
+# 20, not 24, so that a daily timer that starts a little early still runs.
+collector_min_hours = 20
+
+# --- HTTP ------------------------------------------------------------------
+
+# Sent with every request, so a site owner can see who is calling.
+user_agent = "trueffelsau/0.1 (+https://github.com/martinus/trueffelsau)"
+
+# Seconds to wait for a connection and for each read.
+http_timeout_seconds = 10
+
+# A response larger than this is refused. 2 MiB.
+http_max_bytes = 2097152
+
+# Seconds between two requests to the same host.
+http_min_interval_seconds = 1.0
+
+# Hosts that need a longer wait than the value above.
+[host_min_interval_seconds]
+"api.github.com" = 2.0
