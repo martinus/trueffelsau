@@ -191,6 +191,7 @@ Each collector records `(source, started_at, finished_at, events_new, error)` in
 
 6. `http.py` with retry and min-interval; test with a fake adapter.
 7. `collectors/hn.py` + recorded fixture (`scripts/record_fixture.py hn "postman pricing"`), tests: parse, dedupe on rerun, since-filter.
+   Done 2026-11-03. Terms are sent as quoted phrases: over 14 days the 20 terms matched about 6,000 items unquoted (17 of the first 100 for `price increase` contained the phrase) and about 730 quoted. The first live run stored 725 events in 21 s. Recorded fixtures are committed with author names removed and at most 5 hits (owner decision, 2026-11-03).
 8. `collectors/reddit.py` + fixture, tests as above; paging test.
 9. `classify/prompt.py`, `classify/batch.py`, `batches` table; tests with fake client and `batch_results.jsonl` fixture; `classify --no-wait` and `ingest`.
 10. Candidate creation from classifications (`candidate_events`), minimal `score` with p1–p5 and p7 (p6 = 1.0 until M2), `digest` sections 1 and 4.

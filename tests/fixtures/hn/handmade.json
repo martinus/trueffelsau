@@ -1,0 +1,56 @@
+{
+  "hits": [
+    {
+      "_tags": ["story", "author_someuser", "story_100"],
+      "author": "someuser",
+      "created_at": "2026-11-02T08:00:00Z",
+      "created_at_i": 1793606400,
+      "num_comments": 12,
+      "objectID": "100",
+      "points": 50,
+      "story_text": "We moved from Acme after the <i>price increase</i>.<p>Self-hosting &amp; ffmpeg did the rest.",
+      "title": "Acme doubles its price increase again",
+      "updated_at": "2026-11-02T09:00:00Z",
+      "url": "https://example.com/acme-pricing"
+    },
+    {
+      "_tags": ["story", "author_someuser", "story_101", "ask_hn"],
+      "author": "someuser",
+      "created_at": "2026-11-02T10:00:00Z",
+      "created_at_i": 1793613600,
+      "objectID": "101",
+      "story_text": null,
+      "title": "Ask HN: What do you use after the price increase?",
+      "url": null
+    },
+    {
+      "_tags": ["comment", "author_someuser", "story_100"],
+      "author": "someuser",
+      "children": [103],
+      "comment_text": "The price increase hit us too.<p>We pay &#x27;per seat&#x27; now: <a href=\"https:&#x2F;&#x2F;example.com&#x2F;x\">https:&#x2F;&#x2F;example.com&#x2F;x</a>",
+      "created_at": "2026-11-03T12:30:00Z",
+      "created_at_i": 1793709000,
+      "objectID": "102",
+      "parent_id": 100,
+      "story_id": 100,
+      "story_title": "Acme doubles its price increase again",
+      "story_url": "https://example.com/acme-pricing"
+    },
+    {
+      "_tags": ["comment", "author_someuser", "story_100"],
+      "author": "someuser",
+      "comment_text": "",
+      "created_at": "2026-11-03T13:00:00Z",
+      "created_at_i": 1793710800,
+      "objectID": "103",
+      "parent_id": 102,
+      "story_id": 100,
+      "story_title": "Acme doubles its price increase again"
+    }
+  ],
+  "hitsPerPage": 100,
+  "nbHits": 4,
+  "nbPages": 1,
+  "page": 0,
+  "query": "\"price increase\""
+}

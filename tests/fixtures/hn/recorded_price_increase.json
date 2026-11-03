@@ -1,0 +1,123 @@
+{
+  "request": {
+    "url": "https://hn.algolia.com/api/v1/search_by_date",
+    "params": {
+      "query": "\"price increase\"",
+      "tags": "(story,comment)",
+      "numericFilters": "created_at_i>1792510649",
+      "hitsPerPage": "100",
+      "page": "0"
+    }
+  },
+  "recorded_at": "2026-11-03T15:37:29Z",
+  "response": {
+    "exhaustive": {
+      "nbHits": true,
+      "typo": true
+    },
+    "exhaustiveNbHits": true,
+    "exhaustiveTypo": true,
+    "hits": [
+      {
+        "_tags": [
+          "comment",
+          "story_50346153"
+        ],
+        "children": [
+          50351345
+        ],
+        "comment_text": "Panther Lake is very nice, but they did not sell much of it, in part because of the huge increase in memory price, but also because Panther Lake is much more expensive than the Arrow Lake H that it replaces, even twice more expensive for the variants with good GPU.<p>The great increase in price of Panther Lake is obfuscated by the fact that some part numbers that look like replacements for the corresponding part numbers of Arrow Lake H, and which do not have much higher prices, in reality are not replacements because they have much worse specs, e.g. a much smaller GPU, so for a real upgrade you must go to a higher part number, with a much steeper price increase.<p>I am among those who wanted to buy a Panther Lake based mini-PC, but I dropped my plans after analyzing the new prices, even those of the barebone systems, which have not been affected by the memory crysis.<p>The GPU of Panther Lake continues to be made by TSMC, in about the same technology as for the previous Intel CPUs. Because the greatest increases in Panther Lake prices are in the models with big GPUs, I assume that TSMC has increased the prices that it demands from Intel, due to the shortage of production capacity caused by the demands for AI datacenters, so it is likely that Panther Lake is also an indirect victim of the AI companies.<p>I really hope that Intel will continue to design ARC GPUs with good FP64 performance, because they are the only GPU vendor with good FP64 throughput, which has even increased in the Battlemage generation, while all the other GPU vendors attempt to reduce more and more all the &quot;professional&quot; features of their &quot;consumer&quot; GPUs, in order to reserve them for overpriced &quot;datacenter&quot; GPUs, which are not affordable for small businesses or for individuals.",
+        "created_at": "2026-11-03T12:22:40Z",
+        "created_at_i": 1793708560,
+        "objectID": "50351132",
+        "parent_id": 50348579,
+        "story_id": 50346153,
+        "story_title": "Intel stock collapse worsens as $3.5T chip rout spreads",
+        "story_url": "https://finance.yahoo.com/markets/article/the-intel-stock-collapse-is-getting-worse--and-the-37-trillion-chip-rout-is-spreading-212154947.html",
+        "updated_at": "2026-11-03T12:46:31Z"
+      },
+      {
+        "_tags": [
+          "comment",
+          "story_50344670"
+        ],
+        "comment_text": "I guess we&#x27;ll see if RAM prices come down any time soon. At current price increase rates I think no console stands a chance in the next few years.",
+        "created_at": "2026-11-03T00:55:57Z",
+        "created_at_i": 1793667357,
+        "objectID": "50346547",
+        "parent_id": 50346312,
+        "story_id": 50344670,
+        "story_title": "Apple reports fourth quarter results",
+        "story_url": "https://www.apple.com/newsroom/2026/11/apple-reports-fourth-quarter-results/",
+        "updated_at": "2026-11-03T00:56:29Z"
+      },
+      {
+        "_tags": [
+          "comment",
+          "story_50312922"
+        ],
+        "comment_text": "There&#x27;s no should, only what economics incentivize. Right now we&#x27;re not paying for the upfront training costs-it&#x27;s great, the Millennial subsidy continues. But if, and big if right now, the infinite money font dries up and they have to recoup training investment direct from customers then that looks to be a huge price increase on the ground which makes cheap to train and good enough even more attractive than it already is.",
+        "created_at": "2026-10-31T05:26:41Z",
+        "created_at_i": 1793424401,
+        "objectID": "50313445",
+        "parent_id": 50313335,
+        "story_id": 50312922,
+        "story_title": "OpenAI raises less than half of $30B target",
+        "story_url": "https://www.wsj.com/tech/ai/openai-raises-less-than-half-of-30-billion-target-in-latest-round-91aecdc5",
+        "updated_at": "2026-11-01T09:20:23Z"
+      },
+      {
+        "_tags": [
+          "comment",
+          "story_50282766"
+        ],
+        "comment_text": "Eh. Between the 40% price increase and this, I cancelled.<p>So many times AI has been misleading at best for cooking. I don&#x27;t doubt there could be benefits but at this point the trust factor is completely missing.",
+        "created_at": "2026-10-29T19:01:03Z",
+        "created_at_i": 1793300463,
+        "objectID": "50294167",
+        "parent_id": 50282766,
+        "story_id": 50282766,
+        "story_title": "New York Times adds more AI features to its Cooking app. Users aren't thrilled",
+        "story_url": "https://www.niemanlab.org/2026/10/the-new-york-times-is-adding-more-ai-features-to-its-cooking-app-and-users-arent-thrilled/",
+        "updated_at": "2026-10-29T19:06:01Z"
+      },
+      {
+        "_tags": [
+          "comment",
+          "story_50281044"
+        ],
+        "children": [
+          50283263
+        ],
+        "comment_text": "Why is it showing me $749 excluding tax? Did the price increase by $50 since this was posted?",
+        "created_at": "2026-10-28T22:03:15Z",
+        "created_at_i": 1793224995,
+        "objectID": "50281571",
+        "parent_id": 50281044,
+        "story_id": 50281044,
+        "story_title": "Formlabs Studio 1 $699 Resin Printer",
+        "story_url": "https://formlabs.com/products/form-studio-1-basic-founders-edition/",
+        "updated_at": "2026-10-29T13:23:46Z"
+      }
+    ],
+    "hitsPerPage": 100,
+    "nbHits": 17,
+    "nbPages": 1,
+    "page": 0,
+    "params": "query=%22price+increase%22&tags=%28story%2Ccomment%29&numericFilters=created_at_i%3E1792510649&hitsPerPage=100&page=0&advancedSyntax=true&analyticsTags=backend",
+    "processingTimeMS": 1,
+    "processingTimingsMS": {
+      "_request": {
+        "roundTrip": 20
+      },
+      "afterFetch": {
+        "format": {
+          "total": 1
+        }
+      },
+      "total": 1
+    },
+    "query": "\"price increase\"",
+    "serverTimeMS": 2
+  }
+}

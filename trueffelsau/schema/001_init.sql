@@ -19,8 +19,9 @@
 
 -- Raw collected text, one row per signal. Collectors rerun weekly and must not
 -- duplicate what they already stored, which is what `raw_hash` is for: it is a
--- digest of source, URL and text, so `INSERT OR IGNORE` makes a rerun cheap and
--- safe. `event_at` is when the event happened and is null when a source does
+-- digest of source, URL and text, so `ON CONFLICT (raw_hash) DO NOTHING` makes
+-- a rerun cheap and safe (not `INSERT OR IGNORE`, which also skips a row that
+-- breaks NOT NULL). `event_at` is when the event happened and is null when a source does
 -- not say; `fetched_at` is when we looked, and always known.
 CREATE TABLE events (
     id         INTEGER PRIMARY KEY,

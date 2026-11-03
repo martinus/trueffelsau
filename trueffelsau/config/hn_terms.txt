@@ -2,6 +2,8 @@
 # The Reddit collector uses the same terms in each subreddit.
 # One term per line. Blank lines and lines that start with # are ignored.
 # Each term costs one call per source, so keep the list short.
+# Hacker News matches each term as an exact phrase, so "price increase" does
+# not find "price increases". Add the variant as its own line if it matters.
 
 # price
 price increase
