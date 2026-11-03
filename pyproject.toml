@@ -35,9 +35,6 @@ dev = ["ruff>=0.16", "mypy>=2.3", "types-requests", "trueffelsau[test]"]
 [project.scripts]
 trueffelsau = "trueffelsau.cli:main"
 
-[project.scripts]
-trueffelsau = "trueffelsau.cli:main"
-
 [project.urls]
 Homepage = "https://github.com/martinus/trueffelsau"
 Source = "https://github.com/martinus/trueffelsau"
