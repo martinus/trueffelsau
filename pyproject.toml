@@ -15,10 +15,10 @@ requires-python = ">=3.12"
 license = "AGPL-3.0-only"
 authors = [{ name = "Martin Leitner-Ankerl", email = "martin.ankerl@gmail.com" }]
 
-# Deliberately empty so far. CLAUDE.md §13 sanctions `requests` and `anthropic`,
-# and both arrive in the commit that first imports them: a declared dependency
-# nobody uses is a dependency nobody notices going stale.
-dependencies = []
+# CLAUDE.md §13 sanctions `requests` and `anthropic`. Each arrives in the commit
+# that first imports it: a declared dependency nobody uses is a dependency
+# nobody notices going stale. `anthropic` comes with the classifier.
+dependencies = ["requests>=2.32"]
 
 [project.optional-dependencies]
 # Floors, not pins, and recent ones -- these are the versions this tree is
@@ -29,7 +29,8 @@ dependencies = []
 # `test` is separate from `dev` so a job that only runs the suite does not also
 # pull in a linter and a type checker it never invokes.
 test = ["pytest>=8.4"]
-dev = ["ruff>=0.16", "mypy>=2.3", "trueffelsau[test]"]
+# `types-requests` is for mypy only; `requests` ships no type hints.
+dev = ["ruff>=0.16", "mypy>=2.3", "types-requests", "trueffelsau[test]"]
 
 [project.scripts]
 trueffelsau = "trueffelsau.cli:main"
