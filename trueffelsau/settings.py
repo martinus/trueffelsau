@@ -42,9 +42,9 @@ def _default_host_intervals() -> dict[str, float]:
 class Settings:
     """Every setting, with its default. See `config/settings.toml` for what each does."""
 
-    model: str = "claude-sonnet-5"
-    input_price_per_mtok: float = 1.0
-    output_price_per_mtok: float = 5.0
+    model: str = "claude-haiku-5-5"
+    input_price_per_mtok: float = 0.05
+    output_price_per_mtok: float = 0.25
     batch_size: int = 1000
     max_events_per_run: int = 2000
     max_chars_per_event: int = 6000

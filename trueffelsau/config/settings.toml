@@ -9,11 +9,13 @@
 
 # The model that classifies events. Check https://docs.claude.com for current
 # names. When you change it, change the two prices below too.
-model = "claude-sonnet-5"
+# The stronger choice is "claude-sonnet-5-5" at 1.0 and 5.0 per MTok.
+model = "claude-haiku-5-5"
 
 # Batch prices in USD per million tokens. The digest uses them to report cost.
-input_price_per_mtok = 1.0
-output_price_per_mtok = 5.0
+# Haiku 5.5 costs more for prompts over 100,000 tokens; one event is far below.
+input_price_per_mtok = 0.05
+output_price_per_mtok = 0.25
 
 # Events per Message Batches request.
 batch_size = 1000
