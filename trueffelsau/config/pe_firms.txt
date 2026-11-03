@@ -1,0 +1,17 @@
+# Private equity firms for the acquisition-news collector (CLAUDE.md
+# section 6). The collector searches for recent software acquisitions by each
+# firm. One name per line. Lines that start with # are ignored.
+
+Thoma Bravo
+Vista Equity Partners
+Francisco Partners
+Insight Partners
+KKR
+Silver Lake
+Permira
+EQT
+Hg
+Clearlake Capital
+Turn/River Capital
+Marlin Equity Partners
+Accel-KKR

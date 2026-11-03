@@ -1,0 +1,11 @@
+# Pages to fetch and compare every week: pricing pages and changelogs
+# (CLAUDE.md section 6). A change in a page becomes an event.
+#
+# `trueffelsau init` copies this file to $TRUEFFELSAU_HOME/config/watchlist.txt.
+# The copy is private: which products you watch is your judgment.
+#
+# One URL per line. Lines that start with # are ignored.
+# The URLs below are examples. Replace them with your own.
+
+https://www.postman.com/pricing/
+https://www.teamviewer.com/en/pricing/

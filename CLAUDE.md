@@ -94,6 +94,17 @@ and breaks often.
 - `outcomes`: candidate_id, decision, decided_at, note, followup_at,
   followup_result
 
+Four additions make the run resumable and auditable:
+
+- `classifications` also stores input_tokens and output_tokens, for the cost
+  line in the digest.
+- `candidate_events`: candidate_id, event_id. It links a candidate to the
+  events whose quotes are its evidence.
+- `batches`: id, model, schema_version, submitted_at, ended_at, status,
+  request_count. A batch can take 24 hours, so its id must outlive the run.
+- `collector_runs`: source, started_at, finished_at, events_new, error. It
+  feeds the collector health line in the digest.
+
 Never delete rows. Mark them instead.
 
 ## 8. Classifier
@@ -101,7 +112,7 @@ Never delete rows. Mark them instead.
 One call per event. Use a cheap model. Send calls through the Message Batches
 API. Use structured outputs. See `https://docs.claude.com`.
 
-Schema version 1 (`schemas/classification_v1.json`):
+Schema version 1 (`trueffelsau/schemas/classification_v1.json`):
 
 ```json
 {
@@ -189,8 +200,8 @@ trueffelsau/         the package, named after the repository
   home.py            resolves the runtime home, reads the env file
   db.py              opens the database, applies migrations
   schema/            NNN_name.sql migrations, applied in order
-config/              term lists and templates, public ones only
-schemas/             JSON schemas for the classifier, versioned
+  schemas/           JSON schemas for the classifier, versioned
+  config/            templates that `trueffelsau init` copies to the home
 tests/
 CLAUDE.md            this file
 ```
@@ -199,7 +210,8 @@ The private half lives outside the checkout, in the runtime home:
 
 ```
 $TRUEFFELSAU_HOME/   default ~/.local/share/trueffelsau
-  config/            weights.toml, watchlist.txt, CHANGELOG.md
+  config/            settings.toml, weights.toml, term lists, watchlist.txt,
+                     CHANGELOG.md
   data/              radar.db
   digests/           weekly output
   inbox/             manual exports
@@ -210,6 +222,10 @@ The home is outside the checkout on purpose. Each task runs in a throw-away git
 worktree, so a database or a digest archive kept next to the code is discarded
 with the worktree that happened to create it. A path outside the repository
 also cannot be committed by accident.
+
+The migrations, the classifier schemas and the config templates are inside the
+package. The weekly run uses an installed wheel, and a wheel has no repository
+root to read files from.
 
 Language: Python 3.12 or newer. Dependencies: `requests`, `sqlite3` (stdlib),
 `anthropic`, `tomllib` (stdlib). Add a dependency only when it removes real

@@ -1,0 +1,114 @@
+# trueffelsau weights: how the filter in CLAUDE.md section 4 becomes a score.
+#
+# `trueffelsau init` copies this file to $TRUEFFELSAU_HOME/config/weights.toml.
+# The copy is private: it holds the owner's judgment. Change the copy, then
+# write the change and the reason in config/CHANGELOG.md (section 11).
+#
+# These numbers are defaults, not measured values. Check them against the
+# first three digests. If one signal type fills the top 10, they are wrong.
+#
+# Score = sum of weight * point, for points p1 to p7. Each point is 0.0 to 1.0.
+# A classification field that is null maps to 0.5 (unknown), never to 0 or 1.
+
+[weights]
+p1_forced_decision = 0.20
+p2_buyer = 0.15
+p3_moat = 0.15
+p4_heavy_lifting = 0.10
+p5_freshness = 0.15
+p6_clones = 0.15
+p7_owner_fit = 0.10
+
+# Section 4: a candidate scores near zero when point 6 fails. When p6 is 0.0,
+# the whole score is multiplied by this value.
+gate_when_cloned = 0.1
+
+# --- p1: users face a forced decision, and money is attached ---------------
+
+[event_type]
+price = 1.0
+shutdown = 1.0
+forced_account = 0.9
+api_lockdown = 0.8
+license = 0.8
+listing = 0.7
+acquisition = 0.6
+pain = 0.3
+
+# Added to p1 when the classification has evidence that people pay.
+# p1 never goes above 1.0.
+paying_bonus = 0.2
+
+# --- p2: the buyer is a business, a team, or a developer --------------------
+
+[buyer_type]
+developer = 1.0
+smb = 1.0
+enterprise = 1.0
+prosumer = 0.6
+
+# Consumers count only when the value per user is high.
+[consumer_value]
+low = 0.1
+medium = 0.4
+high = 0.8
+
+# --- p3: the moat is code or bad UX ----------------------------------------
+
+[moat]
+code = 1.0
+none = 1.0
+seo = 0.2
+data = 0.1
+network = 0.0
+
+# --- p4: the heavy lifting exists as open source ---------------------------
+
+[heavy_lifting]
+available = 1.0
+not_available = 0.2
+
+# --- p5: the event is fresh ------------------------------------------------
+
+[freshness]
+# 1.0 on the day of the event, falling in a straight line to 0.0 on this day.
+zero_at_days = 60
+
+# --- p6: no clone exists yet -----------------------------------------------
+
+[clones]
+none = 1.0
+only_stale = 0.5
+# A clone is stale when its last commit is older than this.
+stale_after_days = 365
+# A clone closes the window when it has more stars than this and a commit in
+# the last `active_within_days` days. p6 is then 0.0.
+closing_stars = 1000
+active_within_days = 30
+
+# --- p7: the idea fits the owner -------------------------------------------
+
+[fit]
+# Used when no keyword matches.
+default = 0.5
+
+# Matched as lowercase substrings against the category and the names of the
+# open-source software. The highest match wins.
+[fit.keywords]
+"video" = 1.0
+"pdf" = 1.0
+"remote desktop" = 1.0
+"cli" = 1.0
+"linux" = 1.0
+"performance" = 1.0
+"mobile app" = 0.2
+"social" = 0.2
+"marketplace" = 0.2
+
+# Rules the owner can learn. p7 is the higher of the keyword value and this.
+[fit.local_rules]
+AT = 1.0
+DACH = 0.8
+DE = 0.6
+other = 0.4
+none = 0.5

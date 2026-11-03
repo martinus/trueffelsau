@@ -1,0 +1,21 @@
+# Subreddits for the Reddit collector, read through Arctic Shift (CLAUDE.md
+# section 6). Each subreddit costs one call per search term, with a pause of at
+# least one second between calls. Keep the list short.
+# One name per line, without "r/". Lines that start with # are ignored.
+
+selfhosted
+sysadmin
+devops
+linux
+opensource
+SaaS
+webdev
+homelab
+DataHoarder
+
+# Posts about tools that shut down, and the people who rebuild them.
+# Found through isas1/daily-team, which reads this subreddit too.
+SideProject
+
+# Austrian forums (section 6).
+Austria

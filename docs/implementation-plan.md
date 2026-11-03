@@ -16,7 +16,7 @@ Stack decisions (answered 2026-09-16):
 | Python | `requires-python = ">=3.12"`; runs on the installed 3.14.7 | Spec says 3.12; the laptop has only 3.14. Use nothing newer than 3.12 syntax. |
 | Scheduler | systemd user timer, `Persistent=true` | Machine may be off on Monday; timer catches up. Journal gives logs. Already in use on this machine. |
 | Package name | `trueffelsau` (not `radar`) | Matches repo and CLI name. Spec §13 gets updated. |
-| Classifier model | `claude-sonnet-5` via Message Batches + structured outputs | ~$2.50 per 1,000 events at batch price. Configurable in `settings.toml`. |
+| Classifier model | `claude-haiku-5-5` via Message Batches + structured outputs (changed 2026-11-03, was `claude-sonnet-5`) | About $0.15 per 1,000 events at batch price, before thinking tokens; Sonnet 5.5 about $2.50. The docs name classification and extraction as Haiku 5.5's use. Checked on the first real batch (M1 step 11). Configurable in `settings.toml`. |
 | HTTP | `requests` | Per spec. Already a system package; simple; easy to fake in tests. |
 | HTML parsing | stdlib `html.parser` | Marketplace pages are small and plain. Add a parser library only if a page defeats it. |
 | Runtime home | `~/.local/share/trueffelsau/` (override with `TRUEFFELSAU_HOME`) holding `config/`, `data/`, `digests/`, `inbox/`, `venv/` | `gra` puts each task in a throw-away worktree; private state must live outside the worktree. Spec §13/§15 get updated. |
@@ -37,14 +37,14 @@ pyproject.toml
 README.md                        plain language, under one page
 .gitignore                       .venv/, data/, digests/, inbox/, config/weights.toml, config/watchlist.txt, env, .env
 CLAUDE.md                        spec; §13 and §15 updated for package name and runtime home
-config/                          public term lists and templates, copied to $TRUEFFELSAU_HOME/config by `init`
   settings.toml                  model id, batch size, sleep intervals, max events per run
   weights.example.toml           full weights file with all mapping tables
   hn_terms.txt  subreddits.txt  pe_firms.txt  watchlist.example.txt
   CHANGELOG.md                   weight changes and reasons (spec §11)
-schemas/classification_v1.json   spec §8 as real JSON Schema
-trueffelsau/schema/001_init.sql  spec §7 tables; later files add columns, never drop
 trueffelsau/
+  schema/001_init.sql            spec §7 tables; later files add columns, never drop
+  schemas/classification_v1.json spec §8 as real JSON Schema
+  config/                        public term lists and templates, copied to $TRUEFFELSAU_HOME/config by `init`
   __init__.py  __main__.py  cli.py
   home.py                        resolves TRUEFFELSAU_HOME, loads env file, paths
   settings.py                    reads settings.toml (tomllib)
@@ -110,7 +110,7 @@ trueffelsau status                    pending batches, last run per collector, e
 
 ## Classifier (`trueffelsau/classify/`)
 
-- `schemas/classification_v1.json`: spec §8 fields; enums for `event_type`, `buyer_type`, `value_per_user`, `incumbent_moat`, `local_rules`; every field nullable via `anyOf`; `additionalProperties: false`; all fields `required`.
+- `trueffelsau/schemas/classification_v1.json`: spec §8 fields; enums for `event_type`, `buyer_type`, `value_per_user`, `incumbent_moat`, `local_rules`; every scalar field nullable via `anyOf`; the two list fields are plain arrays, empty when nothing is found; `additionalProperties: false`; all fields `required`. Schema, templates and migrations live inside the package because the installed wheel has no repository root.
 - System prompt (frozen text in `prompt.py`, marked `cache_control: {"type": "ephemeral"}`): the three rules from spec §8 (answer only from the text, `null` when unknown, verbatim quotes under 30 words) plus the field definitions. User message: `source`, `source_url`, `event_at`, and `raw_text` (truncated at `settings.max_chars_per_event`, default 6000, with a note when truncated — not silently).
 - Request per event:
   `Request(custom_id=f"event-{id}", params=MessageCreateParamsNonStreaming(model=settings.model, max_tokens=1024, system=[...cached...], messages=[...], output_config={"format": {"type": "json_schema", "schema": schema}}))`
@@ -173,7 +173,7 @@ def collect(ctx) -> CollectResult           # fetch + parse + insert; records he
 | `flippa` | M2 (optional) | Apify actor via REST, needs `APIFY_TOKEN` | Skipped with a status line when the token is unset. |
 | `alternativeto` | M2 (optional) | page fetch | Only if `robots.txt` allows; otherwise skipped, noted in README. |
 | `watchlist` | M3 | fetch URL, diff against last stored body | Generic "fetch and diff a URL" — also serves changelogs. |
-| `pe_news` | M3 | Claude `web_search_20260209` server tool on `claude-sonnet-5`, one call per firm in `pe_firms.txt` | Keeps the stack to one external API. Results become `acquisition` events with the found URL as `source_url`. |
+| `pe_news` | M3 | Claude `web_search_20260209` server tool on `claude-sonnet-5-5`, one call per firm in `pe_firms.txt` | Keeps the stack to one external API. Results become `acquisition` events with the found URL as `source_url`. |
 
 Each collector records `(source, started_at, finished_at, events_new, error)` in a `collector_runs` table (fourth data-model addition; feeds "collector health" in the digest per handoff reflection 4).
 
@@ -182,7 +182,7 @@ Each collector records `(source, started_at, finished_at, events_new, error)` in
 ### M0 — scaffolding (small, one commit each)
 
 1. `pyproject.toml` (hatchling, dynamic version from `trueffelsau/__init__.py`, deps as above, `[project.scripts]`, ruff/mypy config), `.gitignore`, `README.md`, empty package tree.
-2. `schemas/classification_v1.json`, `config/` templates, `schemas/db/001_init.sql`.
+2. `trueffelsau/schemas/classification_v1.json`, `trueffelsau/config/` templates, `trueffelsau/schema/001_init.sql`.
 3. `home.py`, `settings.py`, `db.py` with `migrate()`; `trueffelsau init`; tests for migrate (idempotent, `user_version` advances) and env-file parsing.
 4. `.github/workflows/ci.yml`.
 5. Update `CLAUDE.md` §7 (four table additions), §13 (package name, runtime home), §15 (private files live in `$TRUEFFELSAU_HOME`).
@@ -194,21 +194,22 @@ Each collector records `(source, started_at, finished_at, events_new, error)` in
 8. `collectors/reddit.py` + fixture, tests as above; paging test.
 9. `classify/prompt.py`, `classify/batch.py`, `batches` table; tests with fake client and `batch_results.jsonl` fixture; `classify --no-wait` and `ingest`.
 10. Candidate creation from classifications (`candidate_events`), minimal `score` with p1–p5 and p7 (p6 = 1.0 until M2), `digest` sections 1 and 4.
-11. `run` command. Definition of done: `trueffelsau run` on the laptop produces one `digests/YYYY-WW.md` and every top-10 entry shows the quotes and event ids behind its score.
+11. Model check, once, on the first real collection: classify the same 50 events with `claude-haiku-5-5` and `claude-sonnet-5-5` (cost: under $0.50). Compare `event_type`, `buyer_type`, `value_per_user`, `incumbent_moat` and `heavy_lifting_available`. If they disagree on more than 1 event in 10 for these fields, read the disagreements: when Sonnet is right in most of them, switch the default to Sonnet 5.5. Record the result and the decision here.
+12. `run` command. Definition of done: `trueffelsau run` on the laptop produces one `digests/YYYY-WW.md` and every top-10 entry shows the quotes and event ids behind its score.
 
 ### M2 — weekend 2: marketplaces and clones
 
-12. `score/clones.py` + fixture; p6 wired in; `clones` command.
-13. `mabya.py`, `projektify.py`, `acquire_csv.py` with fixtures; digest section 3.
-14. `flippa.py` and `alternativeto.py` only if access checks pass; otherwise document why not.
+13. `score/clones.py` + fixture; p6 wired in; `clones` command.
+14. `mabya.py`, `projektify.py`, `acquire_csv.py` with fixtures; digest section 3.
+15. `flippa.py` and `alternativeto.py` only if access checks pass; otherwise document why not.
 
 ### M3 — weekend 3: scoring loop, kill list, timer
 
-15. `score --recompute`, `weights_version`, `config/CHANGELOG.md` convention.
-16. Kill list (digest section 2) from last week's top 20 vs current p6/status.
-17. `decide`, `followup`, digest section 5 (outcomes loop, spec §11).
-18. `watchlist.py`, `pe_news.py`.
-19. `scripts/install.sh` + `systemd/trueffelsau.{service,timer}` (`OnCalendar=Mon 06:00`, `Persistent=true`, `EnvironmentFile=%h/.local/share/trueffelsau/env`, `ExecStart=%h/.local/share/trueffelsau/venv/bin/trueffelsau run`). README section "Install on your machine".
+16. `score --recompute`, `weights_version`, `config/CHANGELOG.md` convention.
+17. Kill list (digest section 2) from last week's top 20 vs current p6/status.
+18. `decide`, `followup`, digest section 5 (outcomes loop, spec §11).
+19. `watchlist.py`, `pe_news.py`.
+20. `scripts/install.sh` + `systemd/trueffelsau.{service,timer}` (`OnCalendar=Mon 06:00`, `Persistent=true`, `EnvironmentFile=%h/.local/share/trueffelsau/env`, `ExecStart=%h/.local/share/trueffelsau/venv/bin/trueffelsau run`). README section "Install on your machine".
 
 ### After M3
 
@@ -234,10 +235,41 @@ sqlite3 /tmp/tsau/data/radar.db 'select candidate_id, score, evidence_json from 
 
 After M3: `scripts/install.sh`, then `systemctl --user list-timers trueffelsau.timer` and `systemctl --user start trueffelsau.service && journalctl --user -u trueffelsau -n 50`.
 
+## Ideas taken from isas1/daily-team
+
+`isas1/daily-team` (MIT, JavaScript) reads GitHub Trending, Hacker News,
+Reddit and design feeds every day and builds one small web tool from them. It
+asks a different question ("what can we build today?", not "what will someone
+pay for?"), so its scoring and its LLM debate do not apply here. Its source
+handling does. These ideas are re-implemented in Python; no code is copied.
+
+| Idea | Where it goes here |
+|---|---|
+| Hard limits on every fetch: timeout, byte ceiling checked while reading, expected content type | `http.py` (M1 step 6) |
+| Refuse a redirect instead of following it blindly | `http.py`: same-host redirects only |
+| A source fetched successfully in the last day is skipped, not fetched again | `collect` checks `collector_runs`; `collector_min_hours` in `settings.toml` (spec §12: at most once a day) |
+| A source that fails records the reason and the run continues | `collector_runs.error`; already in the schema |
+| A disabled source stays in the list with its reason | collector registry (M1) |
+| An HTML parser that finds zero items raises "markup may have changed" instead of returning nothing | marketplace collectors (M2) |
+| A check rejects model text that is not in the input facts | classifier ingest (M1 step 9): a quote that is not a substring of `raw_text` is dropped and logged |
+| r/SideProject as a source of shutdown and pain posts | `config/subreddits.txt` (inside the existing Reddit source) |
+
+Not taken: GitHub Trending as a source. It is not in spec §6, and spec §16
+says to ask first.
+
 ## Risks and open points
 
 - Spec §7/§13/§15 need the edits listed in M0 step 5; §16 forbids changing the filter (§4) and adding sources, and this plan does neither.
 - Point 7 (owner fit) mapping is a heuristic; expect to tune it after the first digests.
 - Arctic Shift paging and uptime are unverified; the reddit collector must fail soft (record error, continue with other sources).
 - Marketplace HTML can change; fixtures pin the parsed shape so a break shows up as a test failure, not a silent empty digest.
-- No Anthropic key exists on the machine yet; M1 step 11 needs one.
+- No Anthropic key exists on the machine yet; M1 steps 11 and 12 need one.
+- Model choice, decided 2026-11-03: `claude-haiku-5-5`. Batch prices per MTok
+  (input / output) are $0.05 / $0.25 for Haiku 5.5 and $1 / $5 for
+  `claude-sonnet-5-5`; `claude-sonnet-5` is now a legacy model. Haiku is
+  not proven good enough for the judgment fields (`buyer_type`,
+  `value_per_user`, `incumbent_moat`), so M1 step 11 compares it with
+  Sonnet 5.5 on real events. To switch, change `model` and the two prices in
+  `settings.toml`.
+- Structured outputs can change the capitalization of an enum value. Ingest
+  compares enum values case-insensitively and stores them in lowercase.

@@ -1,0 +1,86 @@
+{
+  "type": "object",
+  "description": "Classification of one collected event, schema version 1 (CLAUDE.md section 8). Answer only from the given text. Use null when the text does not say.",
+  "properties": {
+    "product": {
+      "anyOf": [{ "type": "string" }, { "type": "null" }],
+      "description": "Name of the product or company the event is about, as the text names it."
+    },
+    "category": {
+      "anyOf": [{ "type": "string" }, { "type": "null" }],
+      "description": "What kind of product it is, in a few words, for example 'remote desktop' or 'PDF editor'."
+    },
+    "event_type": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": ["price", "forced_account", "license", "shutdown", "acquisition", "api_lockdown", "listing", "pain"]
+        },
+        { "type": "null" }
+      ],
+      "description": "price: a price increase or a new paywall. forced_account: the product now requires a login or a cloud account. license: a license change that restricts use. shutdown: a product or feature is discontinued. acquisition: the company is acquired. api_lockdown: an API is closed, priced or rate-limited. listing: a business is for sale. pain: repeated complaints with no single event."
+    },
+    "buyer_type": {
+      "anyOf": [
+        { "type": "string", "enum": ["consumer", "prosumer", "developer", "smb", "enterprise"] },
+        { "type": "null" }
+      ],
+      "description": "Who pays for the product."
+    },
+    "value_per_user": {
+      "anyOf": [{ "type": "string", "enum": ["low", "medium", "high"] }, { "type": "null" }],
+      "description": "How much one user pays or would pay."
+    },
+    "incumbent_moat": {
+      "anyOf": [
+        { "type": "string", "enum": ["network", "data", "seo", "code", "none"] },
+        { "type": "null" }
+      ],
+      "description": "What keeps users with the current product. network: other users are there. data: a data set others do not have. seo: search rankings. code: the software itself, or its UX. none: nothing keeps them."
+    },
+    "heavy_lifting_available": {
+      "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+      "description": "True when the text names open-source software that does the hard part of the product."
+    },
+    "heavy_lifting_names": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Names of that open-source software, for example 'ffmpeg'. Empty when the text names none."
+    },
+    "local_rules": {
+      "anyOf": [
+        { "type": "string", "enum": ["none", "AT", "DE", "DACH", "other"] },
+        { "type": "null" }
+      ],
+      "description": "National rules the product must follow, such as tax or law. none: no local rules apply. AT: Austria. DE: Germany. DACH: Germany, Austria and Switzerland. other: another country."
+    },
+    "evidence_of_paying": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Verbatim quotes from the text that show people pay or would pay. Each under 30 words. Empty when there are none."
+    },
+    "quote": {
+      "anyOf": [{ "type": "string" }, { "type": "null" }],
+      "description": "One verbatim quote from the text that best shows the pain. Under 30 words."
+    },
+    "confidence": {
+      "anyOf": [{ "type": "number" }, { "type": "null" }],
+      "description": "How sure you are of this classification, from 0.0 to 1.0."
+    }
+  },
+  "required": [
+    "product",
+    "category",
+    "event_type",
+    "buyer_type",
+    "value_per_user",
+    "incumbent_moat",
+    "heavy_lifting_available",
+    "heavy_lifting_names",
+    "local_rules",
+    "evidence_of_paying",
+    "quote",
+    "confidence"
+  ],
+  "additionalProperties": false
+}
