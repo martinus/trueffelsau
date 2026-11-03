@@ -16,7 +16,7 @@ Stack decisions (answered 2026-09-16):
 | Python | `requires-python = ">=3.12"`; runs on the installed 3.14.7 | Spec says 3.12; the laptop has only 3.14. Use nothing newer than 3.12 syntax. |
 | Scheduler | systemd user timer, `Persistent=true` | Machine may be off on Monday; timer catches up. Journal gives logs. Already in use on this machine. |
 | Package name | `trueffelsau` (not `radar`) | Matches repo and CLI name. Spec §13 gets updated. |
-| Classifier model | `claude-sonnet-5` via Message Batches + structured outputs | ~$2.50 per 1,000 events at batch price. Configurable in `settings.toml`. |
+| Classifier model | `claude-haiku-5-5` via Message Batches + structured outputs (changed 2026-11-03, was `claude-sonnet-5`) | About $0.15 per 1,000 events at batch price, before thinking tokens; Sonnet 5.5 about $2.50. The docs name classification and extraction as Haiku 5.5's use. Checked on the first real batch (M1 step 11). Configurable in `settings.toml`. |
 | HTTP | `requests` | Per spec. Already a system package; simple; easy to fake in tests. |
 | HTML parsing | stdlib `html.parser` | Marketplace pages are small and plain. Add a parser library only if a page defeats it. |
 | Runtime home | `~/.local/share/trueffelsau/` (override with `TRUEFFELSAU_HOME`) holding `config/`, `data/`, `digests/`, `inbox/`, `venv/` | `gra` puts each task in a throw-away worktree; private state must live outside the worktree. Spec §13/§15 get updated. |
@@ -173,7 +173,7 @@ def collect(ctx) -> CollectResult           # fetch + parse + insert; records he
 | `flippa` | M2 (optional) | Apify actor via REST, needs `APIFY_TOKEN` | Skipped with a status line when the token is unset. |
 | `alternativeto` | M2 (optional) | page fetch | Only if `robots.txt` allows; otherwise skipped, noted in README. |
 | `watchlist` | M3 | fetch URL, diff against last stored body | Generic "fetch and diff a URL" — also serves changelogs. |
-| `pe_news` | M3 | Claude `web_search_20260209` server tool on `claude-sonnet-5`, one call per firm in `pe_firms.txt` | Keeps the stack to one external API. Results become `acquisition` events with the found URL as `source_url`. |
+| `pe_news` | M3 | Claude `web_search_20260209` server tool on `claude-sonnet-5-5`, one call per firm in `pe_firms.txt` | Keeps the stack to one external API. Results become `acquisition` events with the found URL as `source_url`. |
 
 Each collector records `(source, started_at, finished_at, events_new, error)` in a `collector_runs` table (fourth data-model addition; feeds "collector health" in the digest per handoff reflection 4).
 
@@ -194,21 +194,22 @@ Each collector records `(source, started_at, finished_at, events_new, error)` in
 8. `collectors/reddit.py` + fixture, tests as above; paging test.
 9. `classify/prompt.py`, `classify/batch.py`, `batches` table; tests with fake client and `batch_results.jsonl` fixture; `classify --no-wait` and `ingest`.
 10. Candidate creation from classifications (`candidate_events`), minimal `score` with p1–p5 and p7 (p6 = 1.0 until M2), `digest` sections 1 and 4.
-11. `run` command. Definition of done: `trueffelsau run` on the laptop produces one `digests/YYYY-WW.md` and every top-10 entry shows the quotes and event ids behind its score.
+11. Model check, once, on the first real collection: classify the same 50 events with `claude-haiku-5-5` and `claude-sonnet-5-5` (cost: under $0.50). Compare `event_type`, `buyer_type`, `value_per_user`, `incumbent_moat` and `heavy_lifting_available`. If they disagree on more than 1 event in 10 for these fields, read the disagreements: when Sonnet is right in most of them, switch the default to Sonnet 5.5. Record the result and the decision here.
+12. `run` command. Definition of done: `trueffelsau run` on the laptop produces one `digests/YYYY-WW.md` and every top-10 entry shows the quotes and event ids behind its score.
 
 ### M2 — weekend 2: marketplaces and clones
 
-12. `score/clones.py` + fixture; p6 wired in; `clones` command.
-13. `mabya.py`, `projektify.py`, `acquire_csv.py` with fixtures; digest section 3.
-14. `flippa.py` and `alternativeto.py` only if access checks pass; otherwise document why not.
+13. `score/clones.py` + fixture; p6 wired in; `clones` command.
+14. `mabya.py`, `projektify.py`, `acquire_csv.py` with fixtures; digest section 3.
+15. `flippa.py` and `alternativeto.py` only if access checks pass; otherwise document why not.
 
 ### M3 — weekend 3: scoring loop, kill list, timer
 
-15. `score --recompute`, `weights_version`, `config/CHANGELOG.md` convention.
-16. Kill list (digest section 2) from last week's top 20 vs current p6/status.
-17. `decide`, `followup`, digest section 5 (outcomes loop, spec §11).
-18. `watchlist.py`, `pe_news.py`.
-19. `scripts/install.sh` + `systemd/trueffelsau.{service,timer}` (`OnCalendar=Mon 06:00`, `Persistent=true`, `EnvironmentFile=%h/.local/share/trueffelsau/env`, `ExecStart=%h/.local/share/trueffelsau/venv/bin/trueffelsau run`). README section "Install on your machine".
+16. `score --recompute`, `weights_version`, `config/CHANGELOG.md` convention.
+17. Kill list (digest section 2) from last week's top 20 vs current p6/status.
+18. `decide`, `followup`, digest section 5 (outcomes loop, spec §11).
+19. `watchlist.py`, `pe_news.py`.
+20. `scripts/install.sh` + `systemd/trueffelsau.{service,timer}` (`OnCalendar=Mon 06:00`, `Persistent=true`, `EnvironmentFile=%h/.local/share/trueffelsau/env`, `ExecStart=%h/.local/share/trueffelsau/venv/bin/trueffelsau run`). README section "Install on your machine".
 
 ### After M3
 
@@ -262,11 +263,13 @@ says to ask first.
 - Point 7 (owner fit) mapping is a heuristic; expect to tune it after the first digests.
 - Arctic Shift paging and uptime are unverified; the reddit collector must fail soft (record error, continue with other sources).
 - Marketplace HTML can change; fixtures pin the parsed shape so a break shows up as a test failure, not a silent empty digest.
-- No Anthropic key exists on the machine yet; M1 step 11 needs one.
-- Model choice is open again. Checked on 2026-11-03: batch prices per MTok
-  (input / output) are $1 / $5 for `claude-sonnet-5` and $0.05 / $0.25 for
-  `claude-haiku-5-5`. Both support structured outputs. Spec §8 asks for a
-  cheap model. The default stays `claude-sonnet-5` until the owner decides;
-  change `model` and the two prices in `settings.toml` to switch.
+- No Anthropic key exists on the machine yet; M1 steps 11 and 12 need one.
+- Model choice, decided 2026-11-03: `claude-haiku-5-5`. Batch prices per MTok
+  (input / output) are $0.05 / $0.25 for Haiku 5.5 and $1 / $5 for
+  `claude-sonnet-5-5`; `claude-sonnet-5` is now a legacy model. Haiku is
+  not proven good enough for the judgment fields (`buyer_type`,
+  `value_per_user`, `incumbent_moat`), so M1 step 11 compares it with
+  Sonnet 5.5 on real events. To switch, change `model` and the two prices in
+  `settings.toml`.
 - Structured outputs can change the capitalization of an enum value. Ingest
   compares enum values case-insensitively and stores them in lowercase.

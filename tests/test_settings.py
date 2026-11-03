@@ -125,8 +125,8 @@ def test_missing_file_gives_the_defaults(tmp_path: Path) -> None:
 
 def test_load_reads_the_file(tmp_path: Path) -> None:
     path = tmp_path / "settings.toml"
-    path.write_text('model = "claude-haiku-5-5"\n', encoding="utf-8")
-    assert s.load(path).model == "claude-haiku-5-5"
+    path.write_text('model = "claude-sonnet-5-5"\n', encoding="utf-8")
+    assert s.load(path).model == "claude-sonnet-5-5"
 
 
 def test_load_names_the_file_in_an_error(tmp_path: Path) -> None:
