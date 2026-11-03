@@ -1,0 +1,133 @@
+{
+  "request": {
+    "url": "https://hn.algolia.com/api/v1/search_by_date",
+    "params": {
+      "query": "\"shutting down\"",
+      "tags": "(story,comment)",
+      "numericFilters": "created_at_i>1792510655",
+      "hitsPerPage": "100",
+      "page": "0"
+    }
+  },
+  "recorded_at": "2026-11-03T15:37:35Z",
+  "response": {
+    "exhaustive": {
+      "nbHits": true,
+      "typo": true
+    },
+    "exhaustiveNbHits": true,
+    "exhaustiveTypo": true,
+    "hits": [
+      {
+        "_tags": [
+          "story",
+          "story_50330224",
+          "show_hn"
+        ],
+        "created_at": "2026-11-01T21:45:36Z",
+        "created_at_i": 1793569536,
+        "num_comments": 0,
+        "objectID": "50330224",
+        "points": 2,
+        "story_id": 50330224,
+        "story_text": "A few days ago, I got OpenAI&#x27;s email that Prism will be officially shutting down on January 1. Having written my last paper in it, I was quite disappointed since I&#x27;ve never really enjoyed typing LaTeX by hand for long periods. Also, when I updated my macOS recently, I started playing around with Apple&#x27;s Foundation Models a bit (which I&#x27;m late on). So on Saturday I decided that, instead of studying for my midterms, my weekend project was going to be building a local version of Prism that used on-device Apple FMs.<p>It&#x27;s an Overleaf-style editor with a PDF preview that compiles with TeX Live, and it installs TeX for you if you don&#x27;t have it. To use the AI features, select text and press Cmd-K, and you can accept or reject the diff. If you have a handwritten formula that you want to insert, you can place your cursor where you want to insert and drop in a photo, which GLM-OCR turns into LaTeX locally since Apple&#x27;s OCR doesn&#x27;t handle math.<p>What was fun was testing out the capability of the models. Corollary uses SystemLanguageModel.default, which is Apple&#x27;s general-purpose on-device model and the one built into macOS for Apple Intelligence. It&#x27;s about 3B params with a 4,096 token context window on my M1 Max. When asked for plain text, it kept every \\cite, \\ref, \\label and formula intact in 78 of 80 edits, but with structured output (@Generable) it went 0 for 20 because the JSON escaping eats the backslashes (\\text comes back as a tab). While this limits capabilities like full document edits, you can already point it at Ollama or your own API key, and I&#x27;m sure the models will catch up soon.<p>Also, it needs an Apple silicon Mac, and the AI needs macOS 26 with Apple Intelligence. At this stage I don&#x27;t have an Apple Developer ID yet, so the first launch needs System Settings &gt; Privacy &amp; Security &gt; Open Anyway. Sorry about that. Please give it a try and let me know what bugs you run into or what the model struggles on!<p>Github: <a href=\"https:&#x2F;&#x2F;github.com&#x2F;calvinyz&#x2F;corollary\" rel=\"nofollow\">https:&#x2F;&#x2F;github.com&#x2F;calvinyz&#x2F;corollary</a>",
+        "title": "Show HN: Corollary, LaTeX Editor for Mac with On-Device Apple Foundation Models",
+        "updated_at": "2026-11-02T06:10:25Z",
+        "url": "https://calvinyz.github.io/corollary/"
+      },
+      {
+        "_tags": [
+          "story",
+          "story_50307355"
+        ],
+        "created_at": "2026-10-30T17:35:53Z",
+        "created_at_i": 1793381753,
+        "num_comments": 0,
+        "objectID": "50307355",
+        "points": 1,
+        "story_id": 50307355,
+        "title": "Prism (OpenAI) shutting down January 1, 2027",
+        "updated_at": "2026-10-30T17:40:04Z",
+        "url": "https://prism.openai.com/"
+      },
+      {
+        "_tags": [
+          "comment",
+          "story_50331404"
+        ],
+        "children": [
+          50352026
+        ],
+        "comment_text": "Do you think that means I make my own data centers? Like, to get my next product off the ground, I have to go site a data center somewhere near you? How do you think the world works?<p>You are relaying NIMBY talking points (down to &quot;you have a vested interest in shutting down public comment&quot;, which is a first-ballot hall-of-famer), because you&#x27;re so negatively polarized against data centers. It&#x27;s a weird thing to be proud of.",
+        "created_at": "2026-11-02T19:01:25Z",
+        "created_at_i": 1793646085,
+        "objectID": "50341847",
+        "parent_id": 50341797,
+        "story_id": 50331404,
+        "story_title": "America on Data Centers: listen to 10,000+ city council comments",
+        "story_url": "https://www.americansentiment.com/datacenters",
+        "updated_at": "2026-11-03T13:57:01Z"
+      },
+      {
+        "_tags": [
+          "comment",
+          "story_50327266"
+        ],
+        "children": [
+          50329817
+        ],
+        "comment_text": "<i>Zeabur is shutting down: what happens next</i> - <a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=50198025\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=50198025</a> - October 2026<p>- On October 14, 2026 (UTC), an external attacker gained unauthorized access to Zeabur&#x27;s internal systems and some customer services. We began our emergency response as soon as we detected the unusual activity. We have confirmed that this incident affected a broader scope than the incident in late August...Having another security incident in such a short time has let down the people who trusted us. Protecting your services and data is our responsibility, and we have fallen short.<p><i>The end of the road – OSGrid shutting down due to attack</i> - <a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=50060854\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=50060854</a> - October 2026<p><i>7 Companies Forced to Shut Down After a Data Breach</i> - <a href=\"https:&#x2F;&#x2F;n2ws.com&#x2F;blog&#x2F;5-companies-shut-down-data-breaches\" rel=\"nofollow\">https:&#x2F;&#x2F;n2ws.com&#x2F;blog&#x2F;5-companies-shut-down-data-breaches</a> - March 4th, 2025<p>(if others have more examples, I am collecting them, please drop them in a reply)",
+        "created_at": "2026-11-01T17:56:56Z",
+        "created_at_i": 1793555816,
+        "objectID": "50327928",
+        "parent_id": 50327911,
+        "story_id": 50327266,
+        "story_title": "Frontier Airlines Likely Breached",
+        "story_url": "https://www.reddit.com/r/frontierairlines/comments/1xl20e8/psa_email_scam/",
+        "updated_at": "2026-11-02T15:18:32Z"
+      },
+      {
+        "_tags": [
+          "comment",
+          "story_50322173"
+        ],
+        "children": [
+          50328597
+        ],
+        "comment_text": "<i>They have to demonstrate why their advertisement showing people having fun on the beach is intentionally truthful and non-misrepresenting relative to the consumer impression following the advertisement</i><p>Sounds like a court battle that could last for <i>years and years</i>. And in the end I think they would win for the simple reason that they can defend the advertisement by saying the image of people having fun at the beach and enjoying their drink is the intended use of the product.<p>And this is supposed to be easy? There are millions of companies advertising out there and the government is going to pursue these long court battles against all of them to prove their intent?<p>Proving intent to deceive is almost impossible in far more straightforward situations. What you have proposed is ridiculous, draconian, and would not be at all effective without essentially shutting down all media and installing a censorship bureau. So much for free speech!",
+        "created_at": "2026-11-01T17:12:26Z",
+        "created_at_i": 1793553146,
+        "objectID": "50327513",
+        "parent_id": 50327340,
+        "story_id": 50322173,
+        "story_title": "Brazilian Court Sanctions Lawyers for Prompt Injection in Court Filing",
+        "story_url": "https://jetstream.security/insights/brazilian-court-sanctions-prompt-injection-filing/",
+        "updated_at": "2026-11-01T23:07:40Z"
+      }
+    ],
+    "hitsPerPage": 100,
+    "nbHits": 71,
+    "nbPages": 1,
+    "page": 0,
+    "params": "query=%22shutting+down%22&tags=%28story%2Ccomment%29&numericFilters=created_at_i%3E1792510655&hitsPerPage=100&page=0&advancedSyntax=true&analyticsTags=backend",
+    "processingTimeMS": 2,
+    "processingTimingsMS": {
+      "_request": {
+        "queue": 31,
+        "roundTrip": 16
+      },
+      "afterFetch": {
+        "format": {
+          "highlighting": 4,
+          "total": 5
+        }
+      },
+      "fetch": {
+        "query": 1
+      },
+      "total": 2
+    },
+    "query": "\"shutting down\"",
+    "serverTimeMS": 38
+  }
+}

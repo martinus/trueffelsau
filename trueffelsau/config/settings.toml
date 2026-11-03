@@ -36,6 +36,10 @@ batch_poll_seconds = 60
 # 20, not 24, so that a daily timer that starts a little early still runs.
 collector_min_hours = 20
 
+# The first run of a source looks back this many days. Later runs start where
+# the last run without errors started.
+first_run_days = 14
+
 # --- HTTP ------------------------------------------------------------------
 
 # Sent with every request, so a site owner can see who is calling.

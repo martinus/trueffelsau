@@ -50,6 +50,7 @@ class Settings:
     max_chars_per_event: int = 6000
     batch_poll_seconds: float = 60.0
     collector_min_hours: float = 20.0
+    first_run_days: int = 14
     user_agent: str = "trueffelsau/0.1 (+https://github.com/martinus/trueffelsau)"
     http_timeout_seconds: float = 10.0
     http_max_bytes: int = 2 * 1024 * 1024

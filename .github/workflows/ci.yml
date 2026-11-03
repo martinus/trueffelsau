@@ -34,7 +34,7 @@ jobs:
       # Separate from `ruff check`: formatting is a different question, and
       # folding it in hides which of the two failed.
       - run: ruff format --check .
-      - run: mypy trueffelsau tests
+      - run: mypy trueffelsau tests scripts
 
   tests:
     # 3.12 is the floor `pyproject.toml` declares; 3.14 is what the owner's
