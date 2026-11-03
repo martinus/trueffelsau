@@ -37,14 +37,14 @@ pyproject.toml
 README.md                        plain language, under one page
 .gitignore                       .venv/, data/, digests/, inbox/, config/weights.toml, config/watchlist.txt, env, .env
 CLAUDE.md                        spec; §13 and §15 updated for package name and runtime home
-config/                          public term lists and templates, copied to $TRUEFFELSAU_HOME/config by `init`
   settings.toml                  model id, batch size, sleep intervals, max events per run
   weights.example.toml           full weights file with all mapping tables
   hn_terms.txt  subreddits.txt  pe_firms.txt  watchlist.example.txt
   CHANGELOG.md                   weight changes and reasons (spec §11)
-schemas/classification_v1.json   spec §8 as real JSON Schema
-trueffelsau/schema/001_init.sql  spec §7 tables; later files add columns, never drop
 trueffelsau/
+  schema/001_init.sql            spec §7 tables; later files add columns, never drop
+  schemas/classification_v1.json spec §8 as real JSON Schema
+  config/                        public term lists and templates, copied to $TRUEFFELSAU_HOME/config by `init`
   __init__.py  __main__.py  cli.py
   home.py                        resolves TRUEFFELSAU_HOME, loads env file, paths
   settings.py                    reads settings.toml (tomllib)
@@ -110,7 +110,7 @@ trueffelsau status                    pending batches, last run per collector, e
 
 ## Classifier (`trueffelsau/classify/`)
 
-- `schemas/classification_v1.json`: spec §8 fields; enums for `event_type`, `buyer_type`, `value_per_user`, `incumbent_moat`, `local_rules`; every field nullable via `anyOf`; `additionalProperties: false`; all fields `required`.
+- `trueffelsau/schemas/classification_v1.json`: spec §8 fields; enums for `event_type`, `buyer_type`, `value_per_user`, `incumbent_moat`, `local_rules`; every scalar field nullable via `anyOf`; the two list fields are plain arrays, empty when nothing is found; `additionalProperties: false`; all fields `required`. Schema, templates and migrations live inside the package because the installed wheel has no repository root.
 - System prompt (frozen text in `prompt.py`, marked `cache_control: {"type": "ephemeral"}`): the three rules from spec §8 (answer only from the text, `null` when unknown, verbatim quotes under 30 words) plus the field definitions. User message: `source`, `source_url`, `event_at`, and `raw_text` (truncated at `settings.max_chars_per_event`, default 6000, with a note when truncated — not silently).
 - Request per event:
   `Request(custom_id=f"event-{id}", params=MessageCreateParamsNonStreaming(model=settings.model, max_tokens=1024, system=[...cached...], messages=[...], output_config={"format": {"type": "json_schema", "schema": schema}}))`
@@ -182,7 +182,7 @@ Each collector records `(source, started_at, finished_at, events_new, error)` in
 ### M0 — scaffolding (small, one commit each)
 
 1. `pyproject.toml` (hatchling, dynamic version from `trueffelsau/__init__.py`, deps as above, `[project.scripts]`, ruff/mypy config), `.gitignore`, `README.md`, empty package tree.
-2. `schemas/classification_v1.json`, `config/` templates, `schemas/db/001_init.sql`.
+2. `trueffelsau/schemas/classification_v1.json`, `trueffelsau/config/` templates, `trueffelsau/schema/001_init.sql`.
 3. `home.py`, `settings.py`, `db.py` with `migrate()`; `trueffelsau init`; tests for migrate (idempotent, `user_version` advances) and env-file parsing.
 4. `.github/workflows/ci.yml`.
 5. Update `CLAUDE.md` §7 (four table additions), §13 (package name, runtime home), §15 (private files live in `$TRUEFFELSAU_HOME`).
@@ -234,6 +234,28 @@ sqlite3 /tmp/tsau/data/radar.db 'select candidate_id, score, evidence_json from 
 
 After M3: `scripts/install.sh`, then `systemctl --user list-timers trueffelsau.timer` and `systemctl --user start trueffelsau.service && journalctl --user -u trueffelsau -n 50`.
 
+## Ideas taken from isas1/daily-team
+
+`isas1/daily-team` (MIT, JavaScript) reads GitHub Trending, Hacker News,
+Reddit and design feeds every day and builds one small web tool from them. It
+asks a different question ("what can we build today?", not "what will someone
+pay for?"), so its scoring and its LLM debate do not apply here. Its source
+handling does. These ideas are re-implemented in Python; no code is copied.
+
+| Idea | Where it goes here |
+|---|---|
+| Hard limits on every fetch: timeout, byte ceiling checked while reading, expected content type | `http.py` (M1 step 6) |
+| Refuse a redirect instead of following it blindly | `http.py`: same-host redirects only |
+| A source fetched successfully in the last day is skipped, not fetched again | `collect` checks `collector_runs`; `collector_min_hours` in `settings.toml` (spec §12: at most once a day) |
+| A source that fails records the reason and the run continues | `collector_runs.error`; already in the schema |
+| A disabled source stays in the list with its reason | collector registry (M1) |
+| An HTML parser that finds zero items raises "markup may have changed" instead of returning nothing | marketplace collectors (M2) |
+| A check rejects model text that is not in the input facts | classifier ingest (M1 step 9): a quote that is not a substring of `raw_text` is dropped and logged |
+| r/SideProject as a source of shutdown and pain posts | `config/subreddits.txt` (inside the existing Reddit source) |
+
+Not taken: GitHub Trending as a source. It is not in spec §6, and spec §16
+says to ask first.
+
 ## Risks and open points
 
 - Spec §7/§13/§15 need the edits listed in M0 step 5; §16 forbids changing the filter (§4) and adding sources, and this plan does neither.
@@ -241,3 +263,10 @@ After M3: `scripts/install.sh`, then `systemctl --user list-timers trueffelsau.t
 - Arctic Shift paging and uptime are unverified; the reddit collector must fail soft (record error, continue with other sources).
 - Marketplace HTML can change; fixtures pin the parsed shape so a break shows up as a test failure, not a silent empty digest.
 - No Anthropic key exists on the machine yet; M1 step 11 needs one.
+- Model choice is open again. Checked on 2026-11-03: batch prices per MTok
+  (input / output) are $1 / $5 for `claude-sonnet-5` and $0.05 / $0.25 for
+  `claude-haiku-5-5`. Both support structured outputs. Spec §8 asks for a
+  cheap model. The default stays `claude-sonnet-5` until the owner decides;
+  change `model` and the two prices in `settings.toml` to switch.
+- Structured outputs can change the capitalization of an enum value. Ingest
+  compares enum values case-insensitively and stores them in lowercase.
